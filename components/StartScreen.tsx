@@ -5,7 +5,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloudIcon } from './icons';
+import { UploadCloudIcon, ImageIcon, SparklesIcon, ShirtIcon, LayersIcon, CameraIcon } from './icons';
 import { Compare } from './ui/compare';
 import { generateModelImage } from '../services/geminiService';
 import Spinner from './Spinner';
@@ -14,6 +14,19 @@ import { getFriendlyErrorMessage } from '../lib/utils';
 interface StartScreenProps {
   onModelFinalized: (modelUrl: string) => void;
 }
+
+const Section = ({ children, className }: { children: React.ReactNode, className?: string }) => (
+  <motion.section
+    className={className}
+    initial={{ opacity: 0, y: 30 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, amount: 0.2 }}
+    transition={{ duration: 0.6, ease: 'easeOut' }}
+  >
+    {children}
+  </motion.section>
+);
+
 
 const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized }) => {
   const [userImageUrl, setUserImageUrl] = useState<string | null>(null);
@@ -66,52 +79,158 @@ const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized }) => {
     exit: { opacity: 0, x: 20 },
   };
 
+  const UploadButton = ({ id = "image-upload-start" }: { id?: string }) => (
+    <>
+      <label htmlFor={id} className="w-full relative flex items-center justify-center px-8 py-3 text-base font-semibold text-white bg-gray-900 rounded-md cursor-pointer group hover:bg-gray-700 transition-colors">
+        <UploadCloudIcon className="w-5 h-5 mr-3" />
+        Upload Photo
+      </label>
+      <input id={id} type="file" className="hidden" accept="image/png, image/jpeg, image/webp, image/avif, image/heic, image/heif" onChange={handleFileChange} />
+    </>
+  );
+
+
   return (
     <AnimatePresence mode="wait">
       {!userImageUrl ? (
         <motion.div
           key="uploader"
-          className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12"
+          className="w-full flex flex-col items-center"
           variants={screenVariants}
           initial="initial"
           animate="animate"
           exit="exit"
           transition={{ duration: 0.4, ease: "easeInOut" }}
         >
-          <div className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left">
-            <div className="max-w-lg">
-              <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 leading-tight">
-                Create Your Model for Any Look.
-              </h1>
-              <p className="mt-4 text-lg text-gray-600">
-                Ever wondered how an outfit would look on you? Stop guessing. Upload a photo and see for yourself. Our AI creates your personal model, ready to try on anything.
-              </p>
-              <hr className="my-8 border-gray-200" />
-              <div className="flex flex-col items-center lg:items-start w-full gap-3">
-                <label htmlFor="image-upload-start" className="w-full relative flex items-center justify-center px-8 py-3 text-base font-semibold text-white bg-gray-900 rounded-md cursor-pointer group hover:bg-gray-700 transition-colors">
-                  <UploadCloudIcon className="w-5 h-5 mr-3" />
-                  Upload Photo
-                </label>
-                <input id="image-upload-start" type="file" className="hidden" accept="image/png, image/jpeg, image/webp, image/avif, image/heic, image/heif" onChange={handleFileChange} />
-                <p className="text-gray-500 text-sm">Select a clear, full-body photo. Face-only photos also work, but full-body is preferred for best results.</p>
-                <p className="text-gray-500 text-xs mt-1">By uploading, you agree not to create harmful, explicit, or unlawful content. This service is for creative and responsible use only.</p>
-                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+          {/* Hero Section */}
+          <header className="w-full min-h-screen flex items-center justify-center p-4 lg:p-8">
+            <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12">
+              <div className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left">
+                <div className="max-w-lg">
+                  <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 leading-tight">
+                    Your Style, Your Model. Instantly.
+                  </h1>
+                  <p className="mt-4 text-lg text-gray-600">
+                    Stop guessing. See how clothes actually fit *you*. Upload a photo, and our AI will generate a personal fashion model for a virtual try-on experience like no other.
+                  </p>
+                  <hr className="my-8 border-gray-200" />
+                  <div className="flex flex-col items-center lg:items-start w-full gap-3">
+                    <UploadButton />
+                    <p className="text-gray-500 text-sm">Select a clear, full-body photo. Face-only photos also work, but full-body is preferred for best results.</p>
+                    <p className="text-gray-500 text-xs mt-1">By uploading, you agree not to create harmful, explicit, or unlawful content. This service is for creative and responsible use only.</p>
+                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                  </div>
+                </div>
+              </div>
+              <div className="w-full lg:w-1/2 flex flex-col items-center justify-center">
+                <Compare
+                  firstImage="https://storage.googleapis.com/gemini-95-icons/asr-tryon.jpg"
+                  secondImage="https://storage.googleapis.com/gemini-95-icons/asr-tryon-model.png"
+                  slideMode="drag"
+                  className="w-full max-w-sm aspect-[2/3] rounded-2xl bg-gray-200"
+                />
               </div>
             </div>
-          </div>
-          <div className="w-full lg:w-1/2 flex flex-col items-center justify-center">
-            <Compare
-              firstImage="https://storage.googleapis.com/gemini-95-icons/asr-tryon.jpg"
-              secondImage="https://storage.googleapis.com/gemini-95-icons/asr-tryon-model.png"
-              slideMode="drag"
-              className="w-full max-w-sm aspect-[2/3] rounded-2xl bg-gray-200"
-            />
-          </div>
+          </header>
+
+          {/* How It Works Section */}
+          <Section className="py-20 lg:py-28 w-full bg-white">
+            <div className="max-w-5xl mx-auto px-4 text-center">
+              <h2 className="text-4xl font-serif text-gray-800">How It Works</h2>
+              <p className="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Transform your shopping experience in three simple steps.</p>
+              <div className="grid md:grid-cols-3 gap-12 mt-16">
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                    <ImageIcon className="w-8 h-8 text-gray-600"/>
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold text-gray-800">1. Upload Your Photo</h3>
+                  <p className="mt-2 text-gray-500">Start with any clear photo of yourself. A full-body shot gives the best results.</p>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                    <SparklesIcon className="w-8 h-8 text-gray-600"/>
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold text-gray-800">2. AI Creates Your Model</h3>
+                  <p className="mt-2 text-gray-500">Our advanced AI generates a realistic, stylable model while preserving your unique look.</p>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                    <ShirtIcon className="w-8 h-8 text-gray-600"/>
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold text-gray-800">3. Style Your Look</h3>
+                  <p className="mt-2 text-gray-500">Virtually try on clothes from our wardrobe or even upload your own items to see how they fit.</p>
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          {/* Features Section */}
+          <Section className="py-20 lg:py-28 w-full">
+             <div className="max-w-7xl mx-auto px-4">
+               <div className="text-center">
+                  <h2 className="text-4xl font-serif text-gray-800">A New Era of Fashion</h2>
+                  <p className="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Explore features designed to give you confidence in every style choice.</p>
+               </div>
+               <div className="mt-16 grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                  <div className="bg-white p-8 rounded-lg border border-gray-200/80">
+                      <LayersIcon className="w-8 h-8 text-gray-700 mb-4"/>
+                      <h3 className="text-xl font-semibold text-gray-800">Mix & Match</h3>
+                      <p className="mt-2 text-gray-500">Stack multiple layers to create complete outfits. Unleash your inner stylist.</p>
+                  </div>
+                   <div className="bg-white p-8 rounded-lg border border-gray-200/80">
+                      <CameraIcon className="w-8 h-8 text-gray-700 mb-4"/>
+                      <h3 className="text-xl font-semibold text-gray-800">Dynamic Poses</h3>
+                      <p className="mt-2 text-gray-500">View your outfit from various angles for a complete 360-degree perspective.</p>
+                  </div>
+                   <div className="bg-white p-8 rounded-lg border border-gray-200/80">
+                      <UploadCloudIcon className="w-8 h-8 text-gray-700 mb-4"/>
+                      <h3 className="text-xl font-semibold text-gray-800">Upload Your Own</h3>
+                      <p className="mt-2 text-gray-500">Found an item online? Upload its photo and try it on in your virtual dressing room.</p>
+                  </div>
+                  <div className="bg-white p-8 rounded-lg border border-gray-200/80">
+                      <SparklesIcon className="w-8 h-8 text-gray-700 mb-4"/>
+                      <h3 className="text-xl font-semibold text-gray-800">Hyper-Realistic</h3>
+                      <p className="mt-2 text-gray-500">Powered by Gemini, see realistic fabric drapes, shadows, and fit on your body type.</p>
+                  </div>
+               </div>
+             </div>
+          </Section>
+
+          {/* Testimonials Section */}
+          <Section className="py-20 lg:py-28 w-full bg-white">
+              <div className="max-w-5xl mx-auto px-4 text-center">
+                  <h2 className="text-4xl font-serif text-gray-800">Loved by Fashion Explorers</h2>
+                  <div className="grid md:grid-cols-2 gap-8 mt-12 text-left">
+                      <div className="bg-gray-50 p-8 rounded-lg border border-gray-200/60">
+                          <p className="text-gray-700">"This is a game-changer for online shopping! I can finally see how things will look on me before I buy. My confidence in purchasing has skyrocketed."</p>
+                          <p className="font-semibold text-gray-900 mt-4">- Alex Johnson</p>
+                          <p className="text-sm text-gray-500">Style Maven</p>
+                      </div>
+                      <div className="bg-gray-50 p-8 rounded-lg border border-gray-200/60">
+                          <p className="text-gray-700">"So much fun to play with! I tried on styles I would never have picked in-store and discovered a whole new side of my fashion personality."</p>
+                          <p className="font-semibold text-gray-900 mt-4">- Samantha Lee</p>
+                          <p className="text-sm text-gray-500">Fashion Explorer</p>
+                      </div>
+                  </div>
+              </div>
+          </Section>
+
+          {/* Final CTA Section */}
+          <Section className="py-20 lg:py-28 w-full">
+              <div className="max-w-xl mx-auto px-4 text-center">
+                  <h2 className="text-4xl md:text-5xl font-serif text-gray-800">Ready to Find Your Perfect Fit?</h2>
+                  <p className="mt-4 text-lg text-gray-600">Your virtual dressing room awaits. Upload a photo and start your style journey now.</p>
+                  <div className="mt-8 max-w-sm mx-auto">
+                    <UploadButton id="image-upload-final" />
+                  </div>
+              </div>
+          </Section>
+
         </motion.div>
       ) : (
         <motion.div
           key="compare"
-          className="w-full max-w-6xl mx-auto h-full flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12"
+          className="w-full min-h-screen mx-auto h-full flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 p-4"
           variants={screenVariants}
           initial="initial"
           animate="animate"
