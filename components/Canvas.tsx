@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 import React, { useState } from 'react';
-import { RotateCcwIcon, ChevronLeftIcon, ChevronRightIcon, ShareIcon } from './icons';
+import { RotateCcwIcon, ChevronLeftIcon, ChevronRightIcon, ShareIcon, UndoIcon, RedoIcon } from './icons';
 import Spinner from './Spinner';
 import { AnimatePresence, motion } from 'framer-motion';
 import ShareModal from './ShareModal';
@@ -17,9 +17,13 @@ interface CanvasProps {
   poseInstructions: string[];
   currentPoseIndex: number;
   availablePoseKeys: string[];
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
-const Canvas: React.FC<CanvasProps> = ({ displayImageUrl, onStartOver, isLoading, loadingMessage, onSelectPose, poseInstructions, currentPoseIndex, availablePoseKeys }) => {
+const Canvas: React.FC<CanvasProps> = ({ displayImageUrl, onStartOver, isLoading, loadingMessage, onSelectPose, poseInstructions, currentPoseIndex, availablePoseKeys, onUndo, onRedo, canUndo, canRedo }) => {
   const [isPoseMenuOpen, setIsPoseMenuOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   
@@ -73,14 +77,36 @@ const Canvas: React.FC<CanvasProps> = ({ displayImageUrl, onStartOver, isLoading
   
   return (
     <div className="w-full h-full flex items-center justify-center p-4 relative animate-zoom-in group">
-      {/* Start Over Button */}
-      <button 
-          onClick={onStartOver}
-          className="absolute top-4 left-4 z-30 flex items-center justify-center text-center bg-white/60 border border-gray-300/80 text-gray-700 font-semibold py-2 px-4 rounded-full transition-all duration-200 ease-in-out hover:bg-white hover:border-gray-400 active:scale-95 text-sm backdrop-blur-sm"
-      >
-          <RotateCcwIcon className="w-4 h-4 mr-2" />
-          Start Over
-      </button>
+      {/* Top Left Controls */}
+      <div className="absolute top-4 left-4 z-30 flex items-center gap-2">
+        <button 
+            onClick={onStartOver}
+            className="flex items-center justify-center text-center bg-white/60 border border-gray-300/80 text-gray-700 font-semibold py-2 px-4 rounded-full transition-all duration-200 ease-in-out hover:bg-white hover:border-gray-400 active:scale-95 text-sm backdrop-blur-sm"
+        >
+            <RotateCcwIcon className="w-4 h-4 mr-2" />
+            Start Over
+        </button>
+        <div className="flex items-center bg-white/60 border border-gray-300/80 rounded-full backdrop-blur-sm shadow-sm">
+            <button
+                onClick={onUndo}
+                disabled={!canUndo || isLoading}
+                className="p-2.5 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:bg-white/50 rounded-l-full"
+                aria-label="Undo"
+            >
+                <UndoIcon className="w-4 h-4 text-gray-800" />
+            </button>
+            <div className="w-px h-5 bg-gray-300/80"></div>
+            <button
+                onClick={onRedo}
+                disabled={!canRedo || isLoading}
+                className="p-2.5 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:bg-white/50 rounded-r-full"
+                aria-label="Redo"
+            >
+                <RedoIcon className="w-4 h-4 text-gray-800" />
+            </button>
+        </div>
+      </div>
+
 
       {/* Share Button */}
       {displayImageUrl && !isLoading && (

@@ -20,6 +20,7 @@ import AboutPage from './components/AboutPage';
 import PrivacyPage from './components/PrivacyPage';
 import ContactPage from './components/ContactPage';
 import EditGarmentModal from './components/EditGarmentModal';
+import { useHistoryState } from './hooks/useHistoryState';
 
 const POSE_INSTRUCTIONS = [
   "Full frontal view, hands on hips",
@@ -51,15 +52,32 @@ const useMediaQuery = (query: string): boolean => {
   return matches;
 };
 
+interface AppState {
+  outfitHistory: OutfitLayer[];
+  currentOutfitIndex: number;
+  currentPoseIndex: number;
+}
 
 const App: React.FC = () => {
   const [modelImageUrl, setModelImageUrl] = useState<string | null>(null);
-  const [outfitHistory, setOutfitHistory] = useState<OutfitLayer[]>([]);
-  const [currentOutfitIndex, setCurrentOutfitIndex] = useState(0);
+  const { 
+      state, 
+      setState, 
+      undo, 
+      redo, 
+      canUndo, 
+      canRedo, 
+      resetState 
+  } = useHistoryState<AppState>({
+      outfitHistory: [],
+      currentOutfitIndex: 0,
+      currentPoseIndex: 0,
+  });
+  const { outfitHistory, currentOutfitIndex, currentPoseIndex } = state;
+
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [currentPoseIndex, setCurrentPoseIndex] = useState(0);
   const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
   const [wardrobe, setWardrobe] = useState<WardrobeItem[]>(defaultWardrobe);
   const [editingGarment, setEditingGarment] = useState<WardrobeItem | null>(null);
@@ -101,24 +119,29 @@ const App: React.FC = () => {
 
   const handleModelFinalized = (url: string) => {
     setModelImageUrl(url);
-    setOutfitHistory([{
-      garment: null,
-      poseImages: { [POSE_INSTRUCTIONS[0]]: url }
-    }]);
-    setCurrentOutfitIndex(0);
+    resetState({
+      outfitHistory: [{
+        garment: null,
+        poseImages: { [POSE_INSTRUCTIONS[0]]: url }
+      }],
+      currentOutfitIndex: 0,
+      currentPoseIndex: 0,
+    });
     window.location.hash = ''; // Clear hash to hide URL clutter
   };
 
   const handleStartOver = () => {
     setModelImageUrl(null);
-    setOutfitHistory([]);
-    setCurrentOutfitIndex(0);
     setIsLoading(false);
     setLoadingMessage('');
     setError(null);
-    setCurrentPoseIndex(0);
     setIsSheetCollapsed(false);
     setWardrobe(defaultWardrobe);
+    resetState({
+      outfitHistory: [],
+      currentOutfitIndex: 0,
+      currentPoseIndex: 0,
+    });
     window.location.hash = '#home';
   };
 
@@ -127,8 +150,7 @@ const App: React.FC = () => {
 
     const nextLayer = outfitHistory[currentOutfitIndex + 1];
     if (nextLayer && nextLayer.garment?.id === garmentInfo.id) {
-        setCurrentOutfitIndex(prev => prev + 1);
-        setCurrentPoseIndex(0);
+        setState(prev => ({ ...prev, currentOutfitIndex: prev.currentOutfitIndex + 1, currentPoseIndex: 0 }));
         return;
     }
 
@@ -145,11 +167,15 @@ const App: React.FC = () => {
         poseImages: { [currentPoseInstruction]: newImageUrl } 
       };
 
-      setOutfitHistory(prevHistory => {
-        const newHistory = prevHistory.slice(0, currentOutfitIndex + 1);
-        return [...newHistory, newLayer];
+      setState(prevState => {
+        const newHistory = prevState.outfitHistory.slice(0, prevState.currentOutfitIndex + 1);
+        return {
+          ...prevState,
+          outfitHistory: [...newHistory, newLayer],
+          currentOutfitIndex: prevState.currentOutfitIndex + 1,
+          currentPoseIndex: 0, // Reset pose when adding a new garment
+        };
       });
-      setCurrentOutfitIndex(prev => prev + 1);
       
       setWardrobe(prev => {
         if (prev.find(item => item.id === garmentInfo.id)) {
@@ -163,12 +189,15 @@ const App: React.FC = () => {
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [displayImageUrl, isLoading, currentPoseIndex, outfitHistory, currentOutfitIndex]);
+  }, [displayImageUrl, isLoading, currentPoseIndex, outfitHistory, currentOutfitIndex, setState]);
 
   const handleRemoveLastGarment = () => {
     if (currentOutfitIndex > 0) {
-      setCurrentOutfitIndex(prevIndex => prevIndex - 1);
-      setCurrentPoseIndex(0);
+      setState(prevState => ({
+        ...prevState,
+        currentOutfitIndex: prevState.currentOutfitIndex - 1,
+        currentPoseIndex: 0, // Reset pose when removing a garment
+      }));
     }
   };
   
@@ -179,7 +208,7 @@ const App: React.FC = () => {
     const currentLayer = outfitHistory[currentOutfitIndex];
 
     if (currentLayer.poseImages[poseInstruction]) {
-      setCurrentPoseIndex(newIndex);
+      setState(prev => ({...prev, currentPoseIndex: newIndex}));
       return;
     }
 
@@ -189,26 +218,28 @@ const App: React.FC = () => {
     setError(null);
     setIsLoading(true);
     setLoadingMessage(`Changing pose...`);
-    
-    const prevPoseIndex = currentPoseIndex;
-    setCurrentPoseIndex(newIndex);
 
     try {
       const newImageUrl = await generatePoseVariation(baseImageForPoseChange, poseInstruction);
-      setOutfitHistory(prevHistory => {
-        const newHistory = [...prevHistory];
-        const updatedLayer = newHistory[currentOutfitIndex];
-        updatedLayer.poseImages[poseInstruction] = newImageUrl;
-        return newHistory;
+      setState(prevState => {
+        const newHistory = [...prevState.outfitHistory];
+        const updatedLayer = { ...newHistory[prevState.currentOutfitIndex] };
+        updatedLayer.poseImages = { ...updatedLayer.poseImages, [poseInstruction]: newImageUrl };
+        newHistory[prevState.currentOutfitIndex] = updatedLayer;
+        
+        return {
+            ...prevState,
+            outfitHistory: newHistory,
+            currentPoseIndex: newIndex,
+        };
       });
     } catch (err) {
       setError(getFriendlyErrorMessage(err, 'Failed to change pose'));
-      setCurrentPoseIndex(prevPoseIndex);
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [currentPoseIndex, outfitHistory, isLoading, currentOutfitIndex]);
+  }, [currentPoseIndex, outfitHistory, isLoading, currentOutfitIndex, setState]);
 
   const handleOpenEditGarment = (garmentId: string) => {
     const garmentToEdit = wardrobe.find(g => g.id === garmentId);
@@ -282,6 +313,10 @@ const App: React.FC = () => {
                 poseInstructions={POSE_INSTRUCTIONS}
                 currentPoseIndex={currentPoseIndex}
                 availablePoseKeys={availablePoseKeys}
+                onUndo={undo}
+                onRedo={redo}
+                canUndo={canUndo}
+                canRedo={canRedo}
               />
             </div>
 
