@@ -24,9 +24,9 @@ const Footer: React.FC<FooterProps> = ({ isOnDressingScreen = false }) => {
           </a>
         </p>
         <nav className="flex items-center gap-x-4 gap-y-1 flex-wrap justify-center mt-1 sm:mt-0">
-          <a href="/#about" className="font-semibold text-gray-700 hover:text-gray-900 hover:underline">About</a>
-          <a href="/#privacy" className="font-semibold text-gray-700 hover:text-gray-900 hover:underline">Privacy Policy</a>
-          <a href="/#contact" className="font-semibold text-gray-700 hover:text-gray-900 hover:underline">Contact</a>
+          <a href="#about" className="font-semibold text-gray-700 hover:text-gray-900 hover:underline">About</a>
+          <a href="#privacy" className="font-semibold text-gray-700 hover:text-gray-900 hover:underline">Privacy Policy</a>
+          <a href="#contact" className="font-semibold text-gray-700 hover:text-gray-900 hover:underline">Contact</a>
         </nav>
       </div>
     </footer>

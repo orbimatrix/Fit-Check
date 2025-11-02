@@ -68,7 +68,7 @@ const PrivacyPage: React.FC = () => {
             <div className="space-y-2">
                 <h2 className="text-2xl font-serif font-bold text-gray-900">6. Contact Us</h2>
                 <p>
-                    If you have any questions about this Privacy Policy, please <a href="/#contact" className="font-semibold text-gray-900 underline hover:text-gray-700">contact us</a>.
+                    If you have any questions about this Privacy Policy, please <a href="#contact" className="font-semibold text-gray-900 underline hover:text-gray-700">contact us</a>.
                 </p>
             </div>
           </div>
