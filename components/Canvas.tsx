@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 import React, { useState } from 'react';
-import { RotateCcwIcon, ChevronLeftIcon, ChevronRightIcon } from './icons';
+import { RotateCcwIcon, ChevronLeftIcon, ChevronRightIcon, ShareIcon } from './icons';
 import Spinner from './Spinner';
 import { AnimatePresence, motion } from 'framer-motion';
+import ShareModal from './ShareModal';
 
 interface CanvasProps {
   displayImageUrl: string | null;
@@ -20,6 +21,7 @@ interface CanvasProps {
 
 const Canvas: React.FC<CanvasProps> = ({ displayImageUrl, onStartOver, isLoading, loadingMessage, onSelectPose, poseInstructions, currentPoseIndex, availablePoseKeys }) => {
   const [isPoseMenuOpen, setIsPoseMenuOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   
   const handlePreviousPose = () => {
     if (isLoading || availablePoseKeys.length <= 1) return;
@@ -79,6 +81,17 @@ const Canvas: React.FC<CanvasProps> = ({ displayImageUrl, onStartOver, isLoading
           <RotateCcwIcon className="w-4 h-4 mr-2" />
           Start Over
       </button>
+
+      {/* Share Button */}
+      {displayImageUrl && !isLoading && (
+        <button 
+          onClick={() => setIsShareModalOpen(true)}
+          className="absolute top-4 right-4 z-30 flex items-center justify-center text-center bg-white/60 border border-gray-300/80 text-gray-700 font-semibold py-2 px-4 rounded-full transition-all duration-200 ease-in-out hover:bg-white hover:border-gray-400 active:scale-95 text-sm backdrop-blur-sm"
+        >
+          <ShareIcon className="w-4 h-4 mr-2" />
+          Share
+        </button>
+      )}
 
       {/* Image Display or Placeholder */}
       <div className="relative w-full h-full flex items-center justify-center">
@@ -169,6 +182,12 @@ const Canvas: React.FC<CanvasProps> = ({ displayImageUrl, onStartOver, isLoading
           </div>
         </div>
       )}
+
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        imageUrl={displayImageUrl}
+      />
     </div>
   );
 };

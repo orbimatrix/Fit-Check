@@ -19,6 +19,7 @@ import Spinner from './components/Spinner';
 import AboutPage from './components/AboutPage';
 import PrivacyPage from './components/PrivacyPage';
 import ContactPage from './components/ContactPage';
+import EditGarmentModal from './components/EditGarmentModal';
 
 const POSE_INSTRUCTIONS = [
   "Full frontal view, hands on hips",
@@ -61,6 +62,7 @@ const App: React.FC = () => {
   const [currentPoseIndex, setCurrentPoseIndex] = useState(0);
   const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
   const [wardrobe, setWardrobe] = useState<WardrobeItem[]>(defaultWardrobe);
+  const [editingGarment, setEditingGarment] = useState<WardrobeItem | null>(null);
   const isMobile = useMediaQuery('(max-width: 767px)');
   const [route, setRoute] = useState(window.location.hash || '#home');
 
@@ -208,6 +210,49 @@ const App: React.FC = () => {
     }
   }, [currentPoseIndex, outfitHistory, isLoading, currentOutfitIndex]);
 
+  const handleOpenEditGarment = (garmentId: string) => {
+    const garmentToEdit = wardrobe.find(g => g.id === garmentId);
+    if (garmentToEdit) {
+        setEditingGarment(garmentToEdit);
+    }
+  };
+
+  const handleCloseEditGarment = () => {
+    setEditingGarment(null);
+  };
+  
+  const handleUpdateGarment = (garmentToUpdate: WardrobeItem, newFile?: File) => {
+    setWardrobe(prev => {
+      const index = prev.findIndex(g => g.id === garmentToUpdate.id);
+      if (index === -1) return prev;
+      
+      const newWardrobe = [...prev];
+      const updatedItem = { ...newWardrobe[index], name: garmentToUpdate.name };
+
+      if (newFile) {
+        if (updatedItem.url.startsWith('blob:')) {
+          URL.revokeObjectURL(updatedItem.url);
+        }
+        updatedItem.url = URL.createObjectURL(newFile);
+      }
+      
+      newWardrobe[index] = updatedItem;
+      return newWardrobe;
+    });
+    setEditingGarment(null);
+  };
+
+  const handleDeleteGarment = (garmentId: string) => {
+    setWardrobe(prev => {
+      const garment = prev.find(g => g.id === garmentId);
+      if (garment && garment.url.startsWith('blob:')) {
+        URL.revokeObjectURL(garment.url);
+      }
+      return prev.filter(g => g.id !== garmentId);
+    });
+    setEditingGarment(null);
+  };
+
   const viewVariants = {
     initial: { opacity: 0, y: 15 },
     animate: { opacity: 1, y: 0 },
@@ -267,6 +312,7 @@ const App: React.FC = () => {
                     activeGarmentIds={activeGarmentIds}
                     isLoading={isLoading}
                     wardrobe={wardrobe}
+                    onOpenEditGarment={handleOpenEditGarment}
                   />
                 </div>
             </aside>
@@ -320,6 +366,12 @@ const App: React.FC = () => {
         {renderContent()}
       </AnimatePresence>
       <Footer isOnDressingScreen={!!modelImageUrl} />
+      <EditGarmentModal
+        garment={editingGarment}
+        onClose={handleCloseEditGarment}
+        onSave={handleUpdateGarment}
+        onDelete={handleDeleteGarment}
+      />
     </div>
   );
 };
