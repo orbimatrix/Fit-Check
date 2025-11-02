@@ -3,20 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloudIcon, ImageIcon, SparklesIcon, ShirtIcon, LayersIcon, CameraIcon } from './icons';
 import { Compare } from './ui/compare';
 import { generateModelImage } from '../services/geminiService';
 import Spinner from './Spinner';
 import { getFriendlyErrorMessage } from '../lib/utils';
+import Header from './Header';
 
 interface StartScreenProps {
   onModelFinalized: (modelUrl: string) => void;
 }
 
-const Section = ({ children, className }: { children: React.ReactNode, className?: string }) => (
+const Section = ({ children, className, id }: { children: React.ReactNode, className?: string, id?: string }) => (
   <motion.section
+    id={id}
     className={className}
     initial={{ opacity: 0, y: 30 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -33,6 +35,21 @@ const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized }) => {
   const [generatedModelUrl, setGeneratedModelUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // On mount, check if there's a hash and scroll to it.
+    // This is for navigating from other pages (like /#about) to a section on the homepage.
+    const hash = window.location.hash;
+    if (hash && hash !== '#home') {
+        const id = hash.substring(1);
+        setTimeout(() => { // Timeout to allow DOM to render
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100);
+    }
+  }, []);
 
   const handleFileSelect = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -102,8 +119,9 @@ const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized }) => {
           exit="exit"
           transition={{ duration: 0.4, ease: "easeInOut" }}
         >
+          <Header />
           {/* Hero Section */}
-          <header className="w-full min-h-screen flex items-center justify-center p-4 lg:p-8">
+          <header id="home" className="w-full min-h-screen flex items-center justify-center p-4 lg:p-8 pt-20">
             <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12">
               <div className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left">
                 <div className="max-w-lg">
@@ -134,7 +152,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized }) => {
           </header>
 
           {/* How It Works Section */}
-          <Section className="py-20 lg:py-28 w-full bg-white">
+          <Section id="how-it-works" className="py-20 lg:py-28 w-full bg-white">
             <div className="max-w-5xl mx-auto px-4 text-center">
               <h2 className="text-4xl font-serif text-gray-800">How It Works</h2>
               <p className="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Transform your shopping experience in three simple steps.</p>
@@ -165,7 +183,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized }) => {
           </Section>
 
           {/* Features Section */}
-          <Section className="py-20 lg:py-28 w-full">
+          <Section id="features" className="py-20 lg:py-28 w-full">
              <div className="max-w-7xl mx-auto px-4">
                <div className="text-center">
                   <h2 className="text-4xl font-serif text-gray-800">A New Era of Fashion</h2>
@@ -197,7 +215,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized }) => {
           </Section>
 
           {/* Testimonials Section */}
-          <Section className="py-20 lg:py-28 w-full bg-white">
+          <Section id="testimonials" className="py-20 lg:py-28 w-full bg-white">
               <div className="max-w-5xl mx-auto px-4 text-center">
                   <h2 className="text-4xl font-serif text-gray-800">Loved by Fashion Explorers</h2>
                   <div className="grid md:grid-cols-2 gap-8 mt-12 text-left">
