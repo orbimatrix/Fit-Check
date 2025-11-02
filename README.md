@@ -2,7 +2,8 @@
 
 An interactive web application that allows you to become your own fashion model. Upload a photo of yourself and virtually try on different clothing items to see how they fit your style, all powered by the Google Gemini API.
 
-![Demo Screenshot Placeholder](<img width="1920" height="978" alt="image" src="https://github.com/user-attachments/assets/5e987672-e36b-4511-92f9-f16e2f7710c8" />)
+<img width="1920" height="978" alt="image" src="https://github.com/user-attachments/assets/8bed7c91-f411-4256-a15e-00a6d41ee1ea" />
+
 
 ## ✨ Features
 
@@ -20,6 +21,11 @@ This application leverages the multi-modal capabilities of the Gemini `gemini-2.
 1.  **Model Generation:** When a user uploads a photo, it's sent to the Gemini API with a detailed prompt instructing it to create a photorealistic fashion model. The prompt emphasizes preserving the user's identity and body type while standardizing the pose and background for a professional look.
 2.  **Virtual Try-On:** To "wear" a garment, the application sends the current model image and a garment image to the API. The prompt acts as a set of crucial rules: completely replace the original clothing, preserve the model and background, and realistically adapt the new garment to the model's pose with proper lighting and shadows.
 3.  **Pose Variation:** When a new pose is requested, the current image of the model wearing the outfit is sent back to the API with a simple instruction to regenerate it from a different perspective (e.g., "Side profile view"), while keeping the person, clothing, and style identical.
+
+   <img width="1914" height="980" alt="image" src="https://github.com/user-attachments/assets/d77067f1-1a74-42d2-a6f5-c4f4264c26de" />
+   <img width="1213" height="640" alt="image" src="https://github.com/user-attachments/assets/d968be86-5e02-4787-8217-012496039be5" />
+
+
 
 ## 🛠️ Tech Stack
 
