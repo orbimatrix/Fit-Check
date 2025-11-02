@@ -2,7 +2,7 @@
 
 An interactive web application that allows you to become your own fashion model. Upload a photo of yourself and virtually try on different clothing items to see how they fit your style, all powered by the Google Gemini API.
 
-![Demo Screenshot Placeholder](https://storage.googleapis.com/gemini-95-icons/fit-check-demo.png)
+![Demo Screenshot Placeholder](<img width="1920" height="978" alt="image" src="https://github.com/user-attachments/assets/5e987672-e36b-4511-92f9-f16e2f7710c8" />)
 
 ## ✨ Features
 
