@@ -7,20 +7,21 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import StartScreen from './components/StartScreen';
 import Canvas from './components/Canvas';
-import WardrobePanel from './components/WardrobeModal';
+import WardrobePanel from './components/WardrobePanel';
 import OutfitStack from './components/OutfitStack';
 import { generateVirtualTryOnImage, generatePoseVariation } from './services/geminiService';
 import { OutfitLayer, WardrobeItem } from './types';
 import { ChevronDownIcon, ChevronUpIcon } from './components/icons';
 import { defaultWardrobe } from './wardrobe';
 import Footer from './components/Footer';
-import { getFriendlyErrorMessage } from './lib/utils';
+import { getFriendlyErrorMessage, urlToFile } from './lib/utils';
 import Spinner from './components/Spinner';
 import AboutPage from './components/AboutPage';
 import PrivacyPage from './components/PrivacyPage';
 import ContactPage from './components/ContactPage';
 import EditGarmentModal from './components/EditGarmentModal';
 import { useHistoryState } from './hooks/useHistoryState';
+import GenerateGarmentModal from './components/GenerateGarmentModal';
 
 const POSE_INSTRUCTIONS = [
   "Full frontal view, hands on hips",
@@ -81,6 +82,7 @@ const App: React.FC = () => {
   const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
   const [wardrobe, setWardrobe] = useState<WardrobeItem[]>(defaultWardrobe);
   const [editingGarment, setEditingGarment] = useState<WardrobeItem | null>(null);
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width: 767px)');
   const [route, setRoute] = useState(window.location.hash || '#home');
 
@@ -284,6 +286,23 @@ const App: React.FC = () => {
     setEditingGarment(null);
   };
 
+  const handleGarmentGenerated = async (imageUrl: string, prompt: string) => {
+    setIsGenerateModalOpen(false); // Close modal immediately
+    try {
+        const filename = `${prompt.slice(0, 30).replace(/\s/g, '_') || 'generated'}.png`;
+        const file = await urlToFile(imageUrl, filename);
+        const garmentInfo: WardrobeItem = {
+            id: `custom-${Date.now()}`,
+            name: prompt.slice(0, 50),
+            url: URL.createObjectURL(file),
+        };
+        // This function will set its own loading messages and handle errors
+        await handleGarmentSelect(file, garmentInfo);
+    } catch (err) {
+        setError(getFriendlyErrorMessage(err, 'Failed to process generated garment'));
+    }
+  };
+
   const viewVariants = {
     initial: { opacity: 0, y: 15 },
     animate: { opacity: 1, y: 0 },
@@ -348,6 +367,7 @@ const App: React.FC = () => {
                     isLoading={isLoading}
                     wardrobe={wardrobe}
                     onOpenEditGarment={handleOpenEditGarment}
+                    onOpenGenerateGarment={() => setIsGenerateModalOpen(true)}
                   />
                 </div>
             </aside>
@@ -406,6 +426,11 @@ const App: React.FC = () => {
         onClose={handleCloseEditGarment}
         onSave={handleUpdateGarment}
         onDelete={handleDeleteGarment}
+      />
+      <GenerateGarmentModal
+        isOpen={isGenerateModalOpen}
+        onClose={() => setIsGenerateModalOpen(false)}
+        onGarmentGenerated={handleGarmentGenerated}
       />
     </div>
   );

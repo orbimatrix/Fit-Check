@@ -38,3 +38,41 @@ export function getFriendlyErrorMessage(error: unknown, context: string): string
     
     return `${context}. ${rawMessage}`;
 }
+
+// Helper to convert image URL to a File object using a canvas to bypass potential CORS issues.
+export const urlToFile = (url: string, filename: string): Promise<File> => {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        // For default wardrobe items from github, we need crossOrigin.
+        // For blob URLs created locally, it's not strictly needed but doesn't hurt.
+        image.setAttribute('crossOrigin', 'anonymous');
+
+        image.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                return reject(new Error('Could not get canvas context.'));
+            }
+            ctx.drawImage(image, 0, 0);
+
+            canvas.toBlob((blob) => {
+                if (!blob) {
+                    return reject(new Error('Canvas toBlob failed.'));
+                }
+                const mimeType = blob.type || 'image/png';
+                const file = new File([blob], filename, { type: mimeType });
+                resolve(file);
+            }, 'image/png'); // Defaulting to png, blob will have correct type.
+        };
+
+        image.onerror = (error) => {
+            // Provide a more descriptive error
+            reject(new Error(`Could not load image from URL for canvas conversion. This might be a CORS issue if the image is from another domain. URL: ${url}. Error: ${error}`));
+        };
+
+        image.src = url;
+    });
+};

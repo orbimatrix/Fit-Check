@@ -104,3 +104,15 @@ export const generatePoseVariation = async (tryOnImageUrl: string, poseInstructi
     });
     return handleApiResponse(response);
 };
+
+export const generateGarmentImage = async (prompt: string): Promise<string> => {
+    const fullPrompt = `Create a photorealistic e-commerce product photo of the following clothing item: "${prompt}". The item MUST be on a clean, plain, solid white background (#ffffff). The image should be well-lit, in focus, and show the entire garment clearly. Do not include any models, mannequins, or text. Return ONLY the final image.`;
+    const response = await ai.models.generateContent({
+        model,
+        contents: { parts: [{ text: fullPrompt }] },
+        config: {
+            responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    return handleApiResponse(response);
+};
